@@ -26,10 +26,15 @@ public class Punteggio {
 
     /**
      * Una partita nuova, 0 a 0, con la sua regola per vincere.
-     * Pretende: puntiPerVincere è almeno 1; scartoMinimo è almeno 1.
+     * Pretende: puntiPerVincere è almeno 1; scartoMinimo è almeno 1. 
+     * Nuova versione pretende: niente.
      * Promette: una partita 0 a 0, non finita, senza vincitore e con la storia vuota.
      */
     public Punteggio(int puntiPerVincere, int scartoMinimo) {
+        if (puntiPerVincere < 1 || scartoMinimo < 1) {
+            throw new IllegalArgumentException("Valori non validi e/o: puntiPerVincere=" + puntiPerVincere
+        + ", scartoMinimo=" + scartoMinimo);
+        }
         this.puntiPerVincere = puntiPerVincere;
         this.scartoMinimo = scartoMinimo;
     }
@@ -37,12 +42,16 @@ public class Punteggio {
     /**
      * Il lato chi ha fatto un punto.
      * Pretende: chi non è null.
+     * Nuova versione pretende: niente.
      * Promette: se la partita non era finita, il lato chi ha un punto in più, l'altro lato non
      *           cambia e il punto si aggiunge in fondo alla storia; se con questo punto il lato chi
      *           vince (regola in cima alla classe), la partita è finita e il vincitore è chi.
      *           Se la partita era già finita, non cambia niente.
      */
     public void segnaPunto(Lato chi) {
+        if (chi == null) {
+            throw new IllegalArgumentException("Il lato non può essere null");
+        }
         if (isFinita()) {
             return;
         }
@@ -51,9 +60,13 @@ public class Punteggio {
 
     /**
      * Pretende: chi non è null.
+     * Nuova versione pretende: niente.
      * Promette: i punti del lato chi. Non cambia niente.
      */
     public int getPunti(Lato chi) {
+        if (chi == null) {
+            throw new IllegalArgumentException("Il lato non può essere null");
+        }
         int totale = 0;
         for (Lato lato : storia) {
             if (lato == chi) {
@@ -121,5 +134,33 @@ public class Punteggio {
      */
     public void azzera() {
         storia.clear();
+    }
+
+   /**
+     * Invariante di rappresentazione:
+     * - puntiPerVincere e scartoMinimo sono almeno 1;
+     * - storia non è null e non contiene elementi null;
+     * - nella storia non ci sono punti dopo quello che ha chiuso la partita: contando i punti
+     *   in ordine, nessun lato vince (regola della classe) prima dell'ultimo elemento.
+     * Punti, fine e vincitore non sono campi: si ricavano dalla storia, quindi non servono altre proprietà.
+     */
+    boolean repOK() {
+        if (puntiPerVincere < 1 || scartoMinimo < 1 || storia == null || storia.contains(null)) {
+            return false;
+        }
+        int puntiS = 0;
+        int puntiD = 0;
+        for (Lato lato : storia) {
+            if (puntiS >= puntiPerVincere && puntiS - puntiD >= scartoMinimo
+                    || puntiD >= puntiPerVincere && puntiD - puntiS >= scartoMinimo) {
+                return false; // la partita era già finita prima di questo punto
+            }
+            if (lato == Lato.SINISTRA) {
+                puntiS++;
+            } else {
+                puntiD++;
+            }
+        }
+        return true;
     }
 }
